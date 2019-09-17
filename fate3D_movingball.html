@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .net{
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="net" width="500px" height="500px"></canvas>
+    <script>
+        let cvs = document.querySelector('.net')
+        let ctx = cvs.getContext('2d')
+        const WIDTH = cvs.width
+        const HEIGHT = cvs.height
+        let center = {
+            x: WIDTH/2,
+            y: HEIGHT/2,
+            z: 0
+        }
+        // 以显示屏为基准面x-y 垂直方向为z轴 画布中心上方人眼方向为负 距离为-600
+        function getScaleByZ(z, p=600) {
+            let scale
+            if(z < -p){
+                scale = Infinity
+            }else{
+                scale = p / (p+z)
+            }
+            return scale
+        }
+        //绘制
+        // let xcount = 10
+        // let ycount = 10
+        // let step = 50 //间隔
+        // let points =[]
+        // for(let i = 0; i < xcount; i++){
+        //     for(let j = 0;  j < ycount; j++){
+        //         point = {
+        //             x: 0+step*i,
+        //             y: 0,
+        //             z: 0+step*j
+        //         }
+        //         points.push(point)
+        //     }
+        // }
+        // draw(points)
+        function draw(points){
+            ctx.beginPath()
+            let rectWidth = 2
+            points.forEach((point) => {
+                let scale = getScaleByZ(point.z)
+                let drawX = center.x + (point.x - center.x)*scale
+                let drawY = center.y + (point.y - center.y)*scale
+                let drawWidth = rectWidth * scale
+                ctx.fillStyle = '#abcdef'
+                // console.log(drawX, drawY, drawWidth, drawWidth)
+                ctx.fillRect(drawX, drawY, drawWidth, drawWidth)
+            })
+            ctx.closePath()
+        }
+
+        let circlePointCount = 30 // 最大的圈有30个点
+        let angelStep = 2* Math.PI / circlePointCount
+        let radius = 100
+        // function update(angelOffset = 0) {
+        //     arcPoints = [];
+        //     for(i = 0; i < circlePointCount; i++){
+        //         for(j = 0; j < circlePointCount; j++){
+        //             let toxyAngel = angelStep * i +angelOffset
+        //             let toyzAngel = angelStep * j
+        //             let point = {
+        //                 x: 300 + radius * Math.sin(toxyAngel ),
+        //                 y: 300 + radius * Math.cos(toxyAngel) * Math.cos(toyzAngel),
+        //                 z: radius * Math.cos(toxyAngel) * Math.sin(toyzAngel)
+        //             }
+        //             arcPoints.push(point)
+        //         }
+        //     }
+        // }
+        // let arcPoints
+        // let angelOffset = 0
+        // setInterval(() => {
+        //     update(angelOffset+= 0.06)
+        //     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        //     draw(arcPoints)
+        //
+        // }, 150)
+
+        function update(angelOffset = 0) {
+            arcPoints = [];
+            for(i = -radius; i <= radius; i+=radius/20){
+                let y = i
+                for(j = 0; j < circlePointCount; j++){
+                    let xzRadius = Math.sqrt(radius * radius - y * y);
+                    let xzAngel = angelStep * j + angelOffset
+                    let x = xzRadius * Math.cos(xzAngel)
+                    let z = xzRadius * Math.sin(xzAngel)
+                    let point = {
+                        x : 200 + x,
+                        y : 200 + y,
+                        z : z
+                    }
+                    arcPoints.push(point)
+                }
+            }
+        }
+        let arcPoints
+        let angelOffset = 0
+        setInterval(() => {
+            update(angelOffset+= 0.6)
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            draw(arcPoints)
+        }, 150)
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            position:relative;
+        }
+        .wrapCvs{
+            margin: auto 0;
+            width: 100%;
+            height: 600px;
+        }
+        .net{
+            background-color: rgba(27, 38, 46, 1);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wrapCvs">
+        <canvas class="net"  height="600px"></canvas>
+    </div>
+
+<script>
+    let wrapCvs = document.querySelector('.wrapCvs')
+    let cvs = document.querySelector('.net')
+    let ctx = cvs.getContext('2d')
+    cvs.width = wrapCvs.clientWidth
+    const WIDTH = cvs.width
+    const HEIGHT = cvs.height
+    let pointCount = 50
+    let points = []
+    const rgbBlue = 'rgba(27, 38, 46, 1)'
+    const rgbRed = 'rgba(188, 49, 124, 1)'
+    function setColor(rgb, a=1) {
+        return rgb.slice(0, this.length - 2) + a + ')'
+    }
+    class Point{
+        constructor(x,y)
+        {
+            if(x){
+                this.x = x
+            }else{
+                this.x = random(0, WIDTH)
+            }
+
+            console.log(this.x)
+            if(y){
+                this.y = y
+            }else{
+                this.y = random(0, HEIGHT)
+            }
+            this.radius = 2
+            this.dx = -random(0, 1) + .5
+            this.dy = -random(0, 1) + .5
+        }
+    }
+    function random(down, up){
+        if(down > up){
+            let temp = down
+            (down = up) && (up = temp)
+        }
+        return Math.random() * (up - down) + down
+    }
+    function init(){
+        for(let i = 0; i < pointCount; i++){
+            points.push(new Point())
+        }
+    }
+    function draw(){
+        points.forEach((point)=>{
+            ctx.beginPath()
+            ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2)
+            ctx.fillStyle = setColor(rgbRed)
+            ctx.fill()
+            ctx.closePath()
+        })
+    }
+    function stroke(){ //在点与点之前连线
+        for(let i = 0; i < points.length; i++){
+            for(let j = i + 1; j < points.length; j++){
+                ctx.beginPath()
+                let dist = getDistance(points[i], points[j])
+                let prec = ((dist > WIDTH/6) ? 0 : (-dist / WIDTH * 6 + 1)) - 0.2 // 控制连线透明度 过长就不显示 为0
+                ctx.strokeStyle = setColor(rgbRed, prec)
+                ctx.moveTo(points[i].x, points[i].y)
+                ctx.lineTo(points[j].x, points[j].y)
+                ctx.lineWidth = 1
+                ctx.stroke()
+                ctx.closePath()
+            }
+        }
+    }
+    function getDistance(pa, pb){
+        return Math.pow((Math.pow(pa.x - pb.x, 2) + Math.pow(pa.y - pb.y, 2)),.5)
+    }
+    function overstep(num, up){ // 判断是否越界 是 则在反向一端出现
+        if(num < 0){
+            num = num + up
+            //console.log('过边界')
+        }else if(num > up){
+            num = num - up
+            //console.log('过边界')
+        }
+        return num
+    }
+    function update(){
+        for(let i = 0; i < points.length; i++){
+            points[i].x = overstep(points[i].x, WIDTH)
+            points[i].y = overstep(points[i].y, HEIGHT)
+            points[i].x += points[i].dx
+            points[i].y += points[i].dy
+        }
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        draw()
+        stroke()
+        //console.log('1')
+    }
+    init()
+    draw()
+    stroke()
+    setInterval(update, 100)
+    cvs.addEventListener('click',(e) => { //点击 在当前处添加点
+        window.event? window.event.cancelBubble = true : e.stopPropagation()
+        let x= e.clientX - cvs.offsetLeft
+        let y = e.clientY - cvs.offsetTop
+        console.log(cvs.offsetLeft,cvs.offsetTop,x, y)
+        points.push(new Point(x, y))
+        console.log(points)
+        return false
+    })
+    cvs.addEventListener('mousemove', (e) => { // 预览效果
+        if(points[points.length -1].dx === 0){
+            points.pop()
+        }
+        points.push({
+            x : e.clientX - cvs.offsetLeft,
+            y : e.clientY - cvs.offsetTop,
+            radius : 1,
+            dx : 0,
+            dy : 0
+        })
+    })
+    window.onresize = () => {
+        cvs.width = wrapCvs.clientWidth
+    }
+</script>
+</body>
+</html>
